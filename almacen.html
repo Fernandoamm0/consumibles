@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entregas de almacén</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .contenedor {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .tabla-contenedor {
+      flex: 2;
+      background: #2c2c2c;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #333;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    .manual {
+      flex: 1;
+      background-color: #2c2c2c;
+      border: 1px solid #444;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .logo-container {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .manual img {
+      max-width: 100%;
+      display: block;
+    }
+    ol li {
+      margin-bottom: 8px;
+    }
+    .success {
+      color: #4caf50;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Entregas de almacén</h1>
+  <div class="contenedor">
+    <!-- Tabla -->
+    <div class="tabla-contenedor">
+      <div class="success" id="mensajeExito">✅ Entrega registrada correctamente.</div>
+      <table id="tablaEntregas">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Ingeniero</th>
+            <th>Lote</th>
+            <th>Clave</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Manual lateral -->
+    <div class="manual">
+      <div class="logo-container">
+        <img src="https://www.compuservices.com.mx/wpimages/compu-services.png" alt="Logo Compuservices">
+      </div>
+      <h2>Instrucciones para entrega</h2>
+      <ol>
+        <li>Revisa la tabla de solicitudes aprobadas para entrega.</li>
+        <li>Verifica que los datos coincidan con los registros de almacén.</li>
+        <li>Presiona <strong>Marcar como entregado</strong> en la solicitud correspondiente.</li>
+        <li>El estado se actualizará automáticamente a entregado.</li>
+        <li>El mensaje de éxito confirmará que la entrega se registró correctamente.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycby0XfOl3cf0Tag3FK8tVDPBeuFh9LvurYp98Z1_vQvUhNC3kbU7GxTt5mHRH89eU9g/exec";
+    const tbody = document.querySelector("#tablaEntregas tbody");
+    const mensajeExito = document.getElementById("mensajeExito");
+
+    async function cargarEntregas() {
+      try {
+        const res = await fetch(scriptURL + "?entregas=1");
+        const solicitudes = await res.json();
+        tbody.innerHTML = "";
+
+        solicitudes.forEach(s => {
+          const fila = document.createElement("tr");
+          fila.innerHTML = `
+            <td>${s.fecha}</td>
+            <td>${s.ingeniero}</td>
+            <td>${s.lote}</td>
+            <td>${s.clave}</td>
+            <td>${s.cantidad}</td>
+            <td>${s.estado}</td>
+            <td><button onclick="entregar(${s.fila})">Marcar como entregado</button></td>
+          `;
+          tbody.appendChild(fila);
+        });
+      } catch (err) {
+        console.error("Error al cargar entregas:", err);
+      }
+    }
+
+    async function entregar(fila) {
+      try {
+        const formData = new FormData();
+        formData.append("entregar", "1");
+        formData.append("fila", fila);
+        await fetch(scriptURL, { method: "POST", body: formData });
+        mensajeExito.style.display = "block";
+        setTimeout(() => mensajeExito.style.display = "none", 4000);
+        cargarEntregas();
+      } catch (err) {
+        console.error("Error al entregar:", err);
+        alert("❌ Hubo un error al registrar la entrega.");
+      }
+    }
+
+    cargarEntregas();
+  </script>
+</body>
+</html>
